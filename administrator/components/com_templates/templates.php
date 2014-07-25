@@ -1,23 +1,31 @@
 <?php
 /**
- * @version		$Id$
- * @package		Joomla.Administrator
- * @subpackage	com_templates
- * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
- * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ * @package     Joomla.Administrator
+ * @subpackage  com_templates
+ *
+ * @copyright   Copyright (C) 2005 - 2014 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// no direct access
 defined('_JEXEC') or die;
+JHtml::_('behavior.tabstate');
 
-// Access check.
-if (!JFactory::getUser()->authorise('core.manage', 'com_templates')) {
-	return JError::raiseWarning(404, JText::_('JERROR_ALERTNOAUTHOR'));
+$app  = JFactory::getApplication();
+$user = JFactory::getUser();
+
+// ACL for hardening the access to the template manager.
+if (!$user->authorise('core.manage', 'com_templates')
+	|| !$user->authorise('core.edit', 'com_templates')
+	|| !$user->authorise('core.create', 'com_templates')
+	|| !$user->authorise('core.admin', 'com_templates'))
+{
+	$app->enqueueMessage(JText::_('JERROR_ALERTNOAUTHOR'), 'error');
+
+	return false;
 }
 
-// Include dependancies
-jimport('joomla.application.component.controller');
+JLoader::register('TemplatesHelper', __DIR__ . '/helpers/templates.php');
 
-$controller	= JController::getInstance('Templates');
-$controller->execute(JRequest::getCmd('task'));
+$controller	= JControllerLegacy::getInstance('Templates');
+$controller->execute(JFactory::getApplication()->input->get('task'));
 $controller->redirect();

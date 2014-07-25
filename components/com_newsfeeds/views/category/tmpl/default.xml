@@ -107,6 +107,18 @@
 			<field name="spacer2" type="spacer" class="text"
 					label="JGLOBAL_SUBSLIDER_DRILL_CATEGORIES_LABEL"
 			/>
+			<field
+				name="filter_field"
+				type="list"
+				default=""
+				description="JGLOBAL_FILTER_FIELD_DESC"
+				label="JGLOBAL_FILTER_FIELD_LABEL"
+			>
+				<option value="">JGLOBAL_USE_GLOBAL</option>
+				<option value="hide">JHIDE</option>
+				<option value="1">JSHOW</option>
+			</field>
+
 			<field name="show_pagination_limit"
 				type="list"
 				label="JGLOBAL_DISPLAY_SELECT_LABEL"
@@ -213,6 +225,16 @@
 				label="COM_NEWSFEEDS_FIELD_CHARACTER_COUNT_LABEL"
 				size="6"
 			/>
+			
+			<field name="feed_display_order" type="list"
+				description="COM_NEWSFEEDS_FIELD_FEED_DISPLAY_ORDER_DESC"
+				label="COM_NEWSFEEDS_FIELD_FEED_DISPLAY_ORDER_LABEL"
+			>
+				<option value="">JGLOBAL_USE_GLOBAL</option>
+				<option value="des">JGLOBAL_MOST_RECENT_FIRST</option>
+				<option value="asc">JGLOBAL_OLDEST_FIRST</option>
+			</field>
+
 </fieldset>
 
 </fields>

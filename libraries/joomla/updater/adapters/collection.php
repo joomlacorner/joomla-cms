@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  Updater
  *
- * @copyright   Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2014 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -17,9 +17,9 @@ jimport('joomla.updater.updateadapter');
  * @package     Joomla.Platform
  * @subpackage  Updater
  * @since       11.1
- * */
-
-class JUpdaterCollection extends JUpdateAdapter {
+ */
+class JUpdaterCollection extends JUpdateAdapter
+{
 	/**
 	 * Root of the tree
 	 *
@@ -65,8 +65,7 @@ class JUpdaterCollection extends JUpdateAdapter {
 	 */
 	protected function _getStackLocation()
 	{
-
-		return implode('->', $this->_stack);
+		return implode('->', $this->stack);
 	}
 
 	/**
@@ -84,25 +83,33 @@ class JUpdaterCollection extends JUpdateAdapter {
 	/**
 	 * Opening an XML element
 	 *
-	 * @param   object parser object
-	 * @param   string name of element that is opened
-	 * @param   array array of attributes for the element
+	 * @param   object  $parser  Parser object
+	 * @param   string  $name    Name of element that is opened
+	 * @param   array   $attrs   Array of attributes for the element
+	 *
+	 * @return  void
 	 *
 	 * @since   11.1
 	 */
 	public function _startElement($parser, $name, $attrs = array())
 	{
-		array_push($this->_stack, $name);
+		array_push($this->stack, $name);
 		$tag = $this->_getStackLocation();
+
 		// Reset the data
-		eval('$this->'. $tag .'->_data = "";');
-		switch($name)
+		if (isset($this->$tag))
+		{
+			$this->$tag->_data = "";
+		}
+
+		switch ($name)
 		{
 			case 'CATEGORY':
-				if(isset($attrs['REF']))
+				if (isset($attrs['REF']))
 				{
-					$this->update_sites[] = Array('type'=>'collection','location'=>$attrs['REF'],'update_site_id'=>$this->_update_site_id);
-				} else
+					$this->update_sites[] = array('type' => 'collection', 'location' => $attrs['REF'], 'update_site_id' => $this->updateSiteId);
+				}
+				else
 				{
 					// This item will have children, so prepare to attach them
 					$this->pop_parent = 1;
@@ -110,40 +117,57 @@ class JUpdaterCollection extends JUpdateAdapter {
 				break;
 			case 'EXTENSION':
 				$update = JTable::getInstance('update');
-				$update->set('update_site_id', $this->_update_site_id);
-				foreach($this->_updatecols as $col)
+				$update->set('update_site_id', $this->updateSiteId);
+				foreach ($this->updatecols as $col)
 				{
 					// Reset the values if it doesn't exist
-					if(!array_key_exists($col, $attrs))
+					if (!array_key_exists($col, $attrs))
 					{
 						$attrs[$col] = '';
-						if($col == 'CLIENT_ID')
+						if ($col == 'CLIENT')
 						{
 							$attrs[$col] = 'site';
 						}
 					}
 				}
-				$client = JApplicationHelper::getClientInfo($attrs['CLIENT_ID'],1);
-				$attrs['CLIENT_ID'] = $client->id;
+				$client = JApplicationHelper::getClientInfo($attrs['CLIENT'], 1);
+				if (isset($client->id))
+				{
+					$attrs['CLIENT_ID'] = $client->id;
+				}
+
 				// Lower case all of the fields
-				foreach($attrs as $key=>$attr)
+				foreach ($attrs as $key => $attr)
 				{
 					$values[strtolower($key)] = $attr;
 				}
 
 				// Only add the update if it is on the same platform and release as we are
 				$ver = new JVersion;
-				$product = strtolower(JFilterInput::getInstance()->clean($ver->PRODUCT, 'cmd')); // lower case and remove the exclamation mark
-				// Set defaults, the extension file should clarify in case but it may be only available in one version
-				// This allows an update site to specify a targetplatform
-				// targetplatformversion can be a regexp, so 1.[56] would be valid for an extension that supports 1.5 and 1.6
-				// Note: Whilst the version is a regexp here, the targetplatform is not (new extension per platform)
-				//		Additionally, the version is a regexp here and it may also be in an extension file if the extension is
-				//		compatible against multiple versions of the same platform (e.g. a library)
-				if(!isset($values['targetplatform'])) $values['targetplatform'] = $product; // set this to ourself as a default
-				if(!isset($values['targetplatformversion'])) $values['targetplatformversion'] = $ver->RELEASE; // set this to ourself as a default
+
+				// Lower case and remove the exclamation mark
+				$product = strtolower(JFilterInput::getInstance()->clean($ver->PRODUCT, 'cmd'));
+
+				/*
+				 * Set defaults, the extension file should clarify in case but it may be only available in one version
+				 * This allows an update site to specify a targetplatform
+				 * targetplatformversion can be a regexp, so 1.[56] would be valid for an extension that supports 1.5 and 1.6
+				 * Note: Whilst the version is a regexp here, the targetplatform is not (new extension per platform)
+				 * Additionally, the version is a regexp here and it may also be in an extension file if the extension is
+				 * compatible against multiple versions of the same platform (e.g. a library)
+				 */
+				if (!isset($values['targetplatform']))
+				{
+					$values['targetplatform'] = $product;
+				}
+				// Set this to ourself as a default
+				if (!isset($values['targetplatformversion']))
+				{
+					$values['targetplatformversion'] = $ver->RELEASE;
+				}
+				// Set this to ourself as a default
 				// validate that we can install the extension
-				if($product == $values['targetplatform'] && preg_match('/'.$values['targetplatformversion'].'/',$ver->RELEASE))
+				if ($product == $values['targetplatform'] && preg_match('/' . $values['targetplatformversion'] . '/', $ver->RELEASE))
 				{
 					$update->bind($values);
 					$this->updates[] = $update;
@@ -159,15 +183,17 @@ class JUpdaterCollection extends JUpdateAdapter {
 	 * @param   object  $parser  Parser object
 	 * @param   string  $name    Name of the element closing
 	 *
+	 * @return  void
+	 *
 	 * @since   11.1
 	 */
 	protected function _endElement($parser, $name)
 	{
-		$lastcell = array_pop($this->_stack);
-		switch($name)
+		array_pop($this->stack);
+		switch ($name)
 		{
 			case 'CATEGORY':
-				if($this->pop_parent)
+				if ($this->pop_parent)
 				{
 					$this->pop_parent = 0;
 					array_pop($this->parent);
@@ -178,23 +204,31 @@ class JUpdaterCollection extends JUpdateAdapter {
 
 	// Note: we don't care about char data in collection because there should be none
 
-
-	/*
-	 * Find an update
+	/**
+	 * Finds an update
 	 *
-	 * @param   array    Options to use: update_site_id: the unique ID of the update site to look at
+	 * @param   array  $options  Options to use: update_site_id: the unique ID of the update site to look at
 	 *
-	 * @return  array    Update_sites and updates discovered
+	 * @return  array  Update_sites and updates discovered
 	 *
 	 * @since   11.1
 	 */
 	public function findUpdate($options)
 	{
-		$url = $options['location'];
-		$this->_update_site_id = $options['update_site_id'];
-		if(substr($url, -4) != '.xml')
+		$url = trim($options['location']);
+		$this->updateSiteId = $options['update_site_id'];
+
+		$appendExtension = false;
+
+		if (array_key_exists('append_extension', $options))
 		{
-			if(substr($url, -1) != '/') {
+			$appendExtension = $options['append_extension'];
+		}
+
+		if ($appendExtension && (substr($url, -4) != '.xml'))
+		{
+			if (substr($url, -1) != '/')
+			{
 				$url .= '/';
 			}
 			$url .= 'update.xml';
@@ -203,34 +237,65 @@ class JUpdaterCollection extends JUpdateAdapter {
 		$this->base = new stdClass;
 		$this->update_sites = array();
 		$this->updates = array();
-		$dbo = $this->parent->getDBO();
+		$db = $this->parent->getDBO();
 
-		if (!($fp = @fopen($url, "r")))
+		$http = JHttpFactory::getHttp();
+
+		// JHttp transport throws an exception when there's no response.
+		try
 		{
-			$query = $dbo->getQuery(true);
-			$query->update('#__update_sites');
-			$query->set('enabled = 0');
-			$query->where('update_site_id = '. $this->_update_site_id);
-			$dbo->setQuery($query);
-			$dbo->Query();
-			JError::raiseWarning('101', JText::sprintf('JLIB_UPDATER_ERROR_COLLECTION_OPEN_URL', $url));
+			$response = $http->get($url);
+		}
+		catch (RuntimeException $e)
+		{
+			$response = null;
+		}
+
+		if ($response === null || $response->code !== 200)
+		{
+			// If the URL is missing the .xml extension, try appending it and retry loading the update
+			if (!$appendExtension && (substr($url, -4) != '.xml'))
+			{
+				$options['append_extension'] = true;
+				return $this->findUpdate($options);
+			}
+
+			$query = $db->getQuery(true)
+				->update('#__update_sites')
+				->set('enabled = 0')
+				->where('update_site_id = ' . $this->updateSiteId);
+			$db->setQuery($query);
+			$db->execute();
+
+			JLog::add("Error parsing url: " . $url, JLog::WARNING, 'updater');
+			$app = JFactory::getApplication();
+			$app->enqueueMessage(JText::sprintf('JLIB_UPDATER_ERROR_COLLECTION_OPEN_URL', $url), 'warning');
+
 			return false;
 		}
 
-		$this->xml_parser = xml_parser_create('');
-		xml_set_object($this->xml_parser, $this);
-		xml_set_element_handler($this->xml_parser, '_startElement', '_endElement');
+		$this->xmlParser = xml_parser_create('');
+		xml_set_object($this->xmlParser, $this);
+		xml_set_element_handler($this->xmlParser, '_startElement', '_endElement');
 
-		while ($data = fread($fp, 8192))
+		if (!xml_parse($this->xmlParser, $response->body))
 		{
-			if (!xml_parse($this->xml_parser, $data, feof($fp)))
+			// If the URL is missing the .xml extension, try appending it and retry loading the update
+			if (!$appendExtension && (substr($url, -4) != '.xml'))
 			{
-				die(sprintf("XML error: %s at line %d",
-							xml_error_string(xml_get_error_code($this->xml_parser)),
-							xml_get_current_line_number($this->xml_parser)));
+				$options['append_extension'] = true;
+				return $this->findUpdate($options);
 			}
+
+			JLog::add("Error parsing url: " . $url, JLog::WARNING, 'updater');
+
+			$app = JFactory::getApplication();
+			$app->enqueueMessage(JText::sprintf('JLIB_UPDATER_ERROR_COLLECTION_PARSE_URL', $url), 'warning');
+
+			return false;
 		}
+
 		// TODO: Decrement the bad counter if non-zero
-		return Array('update_sites'=>$this->update_sites,'updates'=>$this->updates);
+		return array('update_sites' => $this->update_sites, 'updates' => $this->updates);
 	}
 }

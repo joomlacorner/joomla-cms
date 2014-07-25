@@ -1,23 +1,23 @@
 <?php
 /**
- * @version		$Id$
- * @package		Joomla.Administrator
- * @subpackage	Templates.hathor
- * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
- * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ * @package     Joomla.Administrator
+ * @subpackage  Template.hathor
+ *
+ * @copyright   Copyright (C) 2005 - 2014 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// No direct access.
 defined('_JEXEC') or die;
 
 JHtml::addIncludePath(JPATH_COMPONENT.'/helpers/html');
-JHtml::_('behavior.tooltip');
+
 JHtml::_('behavior.formvalidation');
 ?>
 <script type="text/javascript">
 	Joomla.submitbutton = function(task)
 	{
-		if (task == 'plugin.cancel' || document.formvalidator.isValid(document.id('style-form'))) {
+		if (task == 'plugin.cancel' || document.formvalidator.isValid(document.id('style-form')))
+		{
 			Joomla.submitform(task, document.getElementById('style-form'));
 		}
 	}
@@ -74,7 +74,7 @@ JHtml::_('behavior.formvalidation');
 	</div>
 
 	<div class="col options-section">
-	<?php echo JHtml::_('sliders.start','plugin-sliders-'.$this->item->extension_id); ?>
+	<?php echo JHtml::_('sliders.start', 'plugin-sliders-'.$this->item->extension_id); ?>
 
 		<?php echo $this->loadTemplate('options'); ?>
 

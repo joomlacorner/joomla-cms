@@ -15,10 +15,12 @@
 			addfieldpath="/administrator/components/com_newsfeeds/models/fields"
 		 >
 
-			<field name="id" type="modal_newsfeeds"
+			<field name="id" type="modal_newsfeed"
 				description="COM_NEWSFEEDS_FIELD_SELECT_FEED_DESC"
 				label="COM_NEWSFEEDS_FIELD_SELECT_FEED_LABEL"
 				required="true"
+				edit="true"
+				clear="false"
 			/>
 		</fieldset>
 	</fields>
@@ -55,12 +57,31 @@
 				<option value="1">JSHOW</option>
 			</field>
 
+			<field name="show_tags" type="list"
+				label="COM_NEWSFEEDS_FIELD_SHOW_TAGS_LABEL"
+				description="COM_NEWSFEEDS_FIELD_SHOW_TAGS_DESC"
+			>
+				<option value="">JGLOBAL_USE_GLOBAL</option>
+				<option value="0">JHIDE</option>
+				<option value="1">JSHOW</option>
+			</field>
+
 			<field name="feed_character_count" type="text"
 				default="0"
 				description="COM_NEWSFEEDS_FIELD_CHARACTER_COUNT_DESC"
 				label="COM_NEWSFEEDS_FIELD_CHARACTER_COUNT_LABEL"
 				size="6"
 			/>
+
+			<field name="feed_display_order" type="list"
+				description="COM_NEWSFEEDS_FIELD_FEED_DISPLAY_ORDER_DESC"
+				label="COM_NEWSFEEDS_FIELD_FEED_DISPLAY_ORDER_LABEL"
+			>
+				<option value="">JGLOBAL_USE_GLOBAL</option>
+				<option value="des">JGLOBAL_MOST_RECENT_FIRST</option>
+				<option value="asc">JGLOBAL_OLDEST_FIRST</option>
+			</field>
+			
 		</fieldset>
 	</fields>
 </metadata>

@@ -3,13 +3,13 @@
  * @package     Joomla.Platform
  * @subpackage  Form
  *
- * @copyright   Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2014 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
 
-jimport('joomla.form.formfield');
+JFormHelper::loadFieldClass('text');
 
 /**
  * Form Field class for the Joomla Platform.
@@ -17,12 +17,11 @@ jimport('joomla.form.formfield');
  *
  * @package     Joomla.Platform
  * @subpackage  Form
- * @since       11.1
- *
- * @see         JFormRuleEmail
  * @link        http://www.w3.org/TR/html-markup/input.email.html#input.email
+ * @see         JFormRuleEmail
+ * @since       11.1
  */
-class JFormFieldEMail extends JFormField
+class JFormFieldEMail extends JFormFieldText
 {
 	/**
 	 * The form field type.
@@ -36,22 +35,37 @@ class JFormFieldEMail extends JFormField
 	 * Method to get the field input markup for e-mail addresses.
 	 *
 	 * @return  string  The field input markup.
+	 *
 	 * @since   11.1
 	 */
 	protected function getInput()
 	{
+		// Translate placeholder text
+		$hint = $this->translateHint ? JText::_($this->hint) : $this->hint;
+
 		// Initialize some field attributes.
-		$size		= $this->element['size'] ? ' size="'.(int) $this->element['size'].'"' : '';
-		$maxLength	= $this->element['maxlength'] ? ' maxlength="'.(int) $this->element['maxlength'].'"' : '';
-		$class		= $this->element['class'] ? ' '.(string) $this->element['class'] : '';
-		$readonly	= ((string) $this->element['readonly'] == 'true') ? ' readonly="readonly"' : '';
-		$disabled	= ((string) $this->element['disabled'] == 'true') ? ' disabled="disabled"' : '';
+		$size         = !empty($this->size) ? ' size="' . $this->size . '"' : '';
+		$maxLength    = !empty($this->maxLength) ? ' maxlength="' . $this->maxLength . '"' : '';
+		$class        = !empty($this->class) ? ' class="validate-email ' . $this->class . '"' : ' class="validate-email"';
+		$readonly     = $this->readonly ? ' readonly' : '';
+		$disabled     = $this->disabled ? ' disabled' : '';
+		$required     = $this->required ? ' required aria-required="true"' : '';
+		$hint         = $hint ? ' placeholder="' . $hint . '"' : '';
+		$autocomplete = !$this->autocomplete ? ' autocomplete="off"' : ' autocomplete="' . $this->autocomplete . '"';
+		$autocomplete = $autocomplete == ' autocomplete="on"' ? '' : $autocomplete;
+		$autofocus    = $this->autofocus ? ' autofocus' : '';
+		$multiple     = $this->multiple ? ' multiple' : '';
+		$spellcheck   = $this->spellcheck ? '' : ' spellcheck="false"';
 
 		// Initialize JavaScript field attributes.
-		$onchange	= $this->element['onchange'] ? ' onchange="'.(string) $this->element['onchange'].'"' : '';
+		$onchange = $this->onchange ? ' onchange="' . $this->onchange . '"' : '';
 
-		return '<input type="text" name="'.$this->name.'" class="validate-email'.$class.'" id="'.$this->id.'"' .
-				' value="'.htmlspecialchars($this->value, ENT_COMPAT, 'UTF-8').'"' .
-				$size.$disabled.$readonly.$onchange.$maxLength.'/>';
+		// Including fallback code for HTML5 non supported browsers.
+		JHtml::_('jquery.framework');
+		JHtml::_('script', 'system/html5fallback.js', false, true);
+
+		return '<input type="email" name="' . $this->name . '"' . $class . ' id="' . $this->id . '" value="'
+			. htmlspecialchars(JStringPunycode::emailToUTF8($this->value), ENT_COMPAT, 'UTF-8') . '"' . $spellcheck . $size . $disabled . $readonly
+			. $onchange . $autocomplete . $multiple . $maxLength . $hint . $required . $autofocus . ' />';
 	}
 }

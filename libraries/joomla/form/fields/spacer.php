@@ -3,13 +3,11 @@
  * @package     Joomla.Platform
  * @subpackage  Form
  *
- * @copyright   Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2014 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
-
-jimport('joomla.form.formfield');
 
 /**
  * Form Field class for the Joomla Platform.
@@ -34,6 +32,7 @@ class JFormFieldSpacer extends JFormField
 	 * The spacer does not have accept input.
 	 *
 	 * @return  string  The field input markup.
+	 *
 	 * @since   11.1
 	 */
 	protected function getInput()
@@ -53,47 +52,54 @@ class JFormFieldSpacer extends JFormField
 	protected function getLabel()
 	{
 		$html = array();
-		$class = $this->element['class'] ? (string) $this->element['class'] : '';
-
+		$class = !empty($this->class) ? ' class="' . $this->class . '"' : '';
 		$html[] = '<span class="spacer">';
 		$html[] = '<span class="before"></span>';
-		$html[] = '<span class="'.$class.'">';
-		if ((string) $this->element['hr'] == 'true') {
-			$html[] = '<hr class="'.$class.'" />';
+		$html[] = '<span' . $class . '>';
+
+		if ((string) $this->element['hr'] == 'true')
+		{
+			$html[] = '<hr' . $class . ' />';
 		}
-		else {
+		else
+		{
 			$label = '';
+
 			// Get the label text from the XML element, defaulting to the element name.
 			$text = $this->element['label'] ? (string) $this->element['label'] : (string) $this->element['name'];
 			$text = $this->translateLabel ? JText::_($text) : $text;
 
 			// Build the class for the label.
-			$class = !empty($this->description) ? 'hasTip' : '';
-			$class = $this->required == true ? $class.' required' : $class;
+			$class = !empty($this->description) ? 'hasTooltip' : '';
+			$class = $this->required == true ? $class . ' required' : $class;
 
 			// Add the opening label tag and main attributes attributes.
-			$label .= '<label id="'.$this->id.'-lbl" class="'.$class.'"';
+			$label .= '<label id="' . $this->id . '-lbl" class="' . $class . '"';
 
 			// If a description is specified, use it to build a tooltip.
-			if (!empty($this->description)) {
-				$label .= ' title="'.htmlspecialchars(trim($text, ':').'::' .
-							($this->translateDescription ? JText::_($this->description) : $this->description), ENT_COMPAT, 'UTF-8').'"';
+			if (!empty($this->description))
+			{
+				JHtml::_('bootstrap.tooltip');
+				$label .= ' title="' . JHtml::tooltipText(trim($text, ':'), JText::_($this->description), 0) . '"';
 			}
 
 			// Add the label text and closing tag.
-			$label .= '>'.$text.'</label>';
+			$label .= '>' . $text . '</label>';
 			$html[] = $label;
 		}
+
 		$html[] = '</span>';
 		$html[] = '<span class="after"></span>';
 		$html[] = '</span>';
-		return implode('',$html);
+
+		return implode('', $html);
 	}
 
 	/**
 	 * Method to get the field title.
 	 *
 	 * @return  string  The field title.
+	 *
 	 * @since   11.1
 	 */
 	protected function getTitle()

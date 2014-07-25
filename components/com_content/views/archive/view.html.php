@@ -1,40 +1,45 @@
 <?php
 /**
- * @version		$Id$
- * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
- * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ * @package     Joomla.Site
+ * @subpackage  com_content
+ *
+ * @copyright   Copyright (C) 2005 - 2014 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// No direct access
 defined('_JEXEC') or die;
-
-jimport('joomla.application.component.view');
 
 /**
  * HTML View class for the Content component
  *
- * @package		Joomla.Site
- * @subpackage	com_content
- * @since 1.5
+ * @package     Joomla.Site
+ * @subpackage  com_content
+ * @since       1.5
  */
-class ContentViewArchive extends JView
+class ContentViewArchive extends JViewLegacy
 {
 	protected $state = null;
+
 	protected $item = null;
+
 	protected $items = null;
+
 	protected $pagination = null;
 
-	function display($tpl = null)
+	/**
+	 * Execute and display a template script.
+	 *
+	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
+	 *
+	 * @return  mixed  A string if successful, otherwise a Error object.
+	 */
+	public function display($tpl = null)
 	{
-		$app = JFactory::getApplication();
 		$user		= JFactory::getUser();
 
 		$state 		= $this->get('State');
 		$items 		= $this->get('Items');
 		$pagination	= $this->get('Pagination');
-
-		$pathway	= $app->getPathway();
-		$document	= JFactory::getDocument();
 
 		// Get the page/component configuration
 		$params = &$state->params;
@@ -43,11 +48,15 @@ class ContentViewArchive extends JView
 		{
 			$item->catslug = ($item->category_alias) ? ($item->catid . ':' . $item->category_alias) : $item->catid;
 			$item->parent_slug = ($item->parent_alias) ? ($item->parent_id . ':' . $item->parent_alias) : $item->parent_id;
+
+			// No link for ROOT category
+			if ($item->parent_alias == 'root')
+			{
+				$item->parent_slug = null;
+			}
 		}
 
-
-
-		$form = new stdClass();
+		$form = new stdClass;
 		// Month Field
 		$months = array(
 			'' => JText::_('COM_CONTENT_MONTH'),
@@ -77,7 +86,8 @@ class ContentViewArchive extends JView
 		// Year Field
 		$years = array();
 		$years[] = JHtml::_('select.option', null, JText::_('JYEAR'));
-		for ($i = 2000; $i <= 2020; $i++) {
+		for ($year = date('Y'), $i = $year - 10; $i <= $year; $i++)
+		{
 			$years[] = JHtml::_('select.option', $i, $i);
 		}
 		$form->yearField = JHtml::_(
@@ -91,12 +101,12 @@ class ContentViewArchive extends JView
 		//Escape strings for HTML output
 		$this->pageclass_sfx = htmlspecialchars($params->get('pageclass_sfx'));
 
-		$this->assign('filter', $state->get('list.filter'));
-		$this->assignRef('form', $form);
-		$this->assignRef('items', $items);
-		$this->assignRef('params', $params);
-		$this->assignRef('user', $user);
-		$this->assignRef('pagination', $pagination);
+		$this->filter     = $state->get('list.filter');
+		$this->form       = &$form;
+		$this->items      = &$items;
+		$this->params     = &$params;
+		$this->user       = &$user;
+		$this->pagination = &$pagination;
 
 		$this->_prepareDocument();
 
@@ -108,10 +118,9 @@ class ContentViewArchive extends JView
 	 */
 	protected function _prepareDocument()
 	{
-		$app		= JFactory::getApplication();
-		$menus		= $app->getMenu();
-		$pathway	= $app->getPathway();
-		$title 		= null;
+		$app   = JFactory::getApplication();
+		$menus = $app->getMenu();
+		$title = null;
 
 		// Because the application sets a default page title,
 		// we need to get it from the menu item itself
@@ -119,20 +128,27 @@ class ContentViewArchive extends JView
 		if ($menu)
 		{
 			$this->params->def('page_heading', $this->params->get('page_title', $menu->title));
-		} else {
+		}
+		else
+		{
 			$this->params->def('page_heading', JText::_('JGLOBAL_ARTICLES'));
 		}
 
 		$title = $this->params->get('page_title', '');
-		if (empty($title)) {
-			$title = $app->getCfg('sitename');
+
+		if (empty($title))
+		{
+			$title = $app->get('sitename');
 		}
-		elseif ($app->getCfg('sitename_pagetitles', 0) == 1) {
-			$title = JText::sprintf('JPAGETITLE', $app->getCfg('sitename'), $title);
+		elseif ($app->get('sitename_pagetitles', 0) == 1)
+		{
+			$title = JText::sprintf('JPAGETITLE', $app->get('sitename'), $title);
 		}
-		elseif ($app->getCfg('sitename_pagetitles', 0) == 2) {
-			$title = JText::sprintf('JPAGETITLE', $title, $app->getCfg('sitename'));
+		elseif ($app->get('sitename_pagetitles', 0) == 2)
+		{
+			$title = JText::sprintf('JPAGETITLE', $title, $app->get('sitename'));
 		}
+
 		$this->document->setTitle($title);
 
 		if ($this->params->get('menu-meta_description'))
@@ -151,4 +167,3 @@ class ContentViewArchive extends JView
 		}
 	}
 }
-?>
